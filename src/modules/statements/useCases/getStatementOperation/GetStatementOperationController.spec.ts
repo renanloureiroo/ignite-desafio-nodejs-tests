@@ -18,12 +18,13 @@ jest.mock("../../../../config/auth");
 
 let connection: Connection;
 
-describe("CreateStatementController", () => {
+describe("GetStatementOperation", () => {
   beforeAll(async () => {
     connection = await createConnection();
     await connection.runMigrations();
     const password = await hash("123456", 8);
     const id = uuid();
+
     await connection.query(
       `INSERT INTO USERS(id, name, email, password, created_at)
         VALUES('${id}', 'John Doe', 'johndoe@email.com', '${password}', 'now()')`
@@ -37,7 +38,7 @@ describe("CreateStatementController", () => {
     await connection.close();
   });
 
-  it("should be able to a new create statement deposit", async () => {
+  it("should be able to get statement operation", async () => {
     const { body } = await request(app).post("/api/v1/sessions").send({
       email: "johndoe@email.com",
       password: "123456",
@@ -45,7 +46,7 @@ describe("CreateStatementController", () => {
 
     const { token } = body;
 
-    await request(app)
+    const responseStatement = await request(app)
       .post("/api/v1/statements/deposit")
       .send({
         amount: 100,
@@ -53,14 +54,17 @@ describe("CreateStatementController", () => {
       })
       .set({
         Authorization: `Bearer ${token}`,
-      })
-      .expect(201)
-      .expect((response) => {
-        expect(response.body).toHaveProperty("id");
       });
+
+    await request(app)
+      .get(`/api/v1/statements/${responseStatement.body.id}`)
+      .set({
+        Authorization: `Bearer ${token}`,
+      })
+      .expect(200);
   });
 
-  it("should be able to a new create statement withdraw", async () => {
+  it("should not be able to get statement operation", async () => {
     const { body } = await request(app).post("/api/v1/sessions").send({
       email: "johndoe@email.com",
       password: "123456",
@@ -69,42 +73,10 @@ describe("CreateStatementController", () => {
     const { token } = body;
 
     await request(app)
-      .post("/api/v1/statements/withdraw")
-      .send({
-        amount: 50,
-        description: "Withdraw statement test",
-      })
+      .get(`/api/v1/statements/ca1ef8f4-fa57-4701-a524-9e43fb605702`)
       .set({
         Authorization: `Bearer ${token}`,
       })
-      .expect(201)
-      .expect((response) => {
-        expect(response.body).toHaveProperty("id");
-      });
-  });
-
-  it("should not be able to a new create statement withdraw with insufficient funds", async () => {
-    const { body } = await request(app).post("/api/v1/sessions").send({
-      email: "johndoe@email.com",
-      password: "123456",
-    });
-
-    const { token } = body;
-
-    await request(app)
-      .post("/api/v1/statements/withdraw")
-      .send({
-        amount: 100,
-        description: "Withdraw statement test",
-      })
-      .set({
-        Authorization: `Bearer ${token}`,
-      })
-      .expect(400)
-      .expect((response) => {
-        expect(response.body).toEqual({
-          message: "Insufficient funds",
-        });
-      });
+      .expect(404);
   });
 });
