@@ -6,12 +6,12 @@
   "scripts": {
     "dev": "ts-node-dev --transpile-only --ignore-watch node_modules --respawn ./src/server.ts",
     "typeorm": "ts-node-dev ./node_modules/typeorm/cli",
-    "test": "jest"
+    "test": "NODE_TEST=test jest --detectOpenHandles"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
     "cors": "^2.8.5",
-    "express": "^4.17.1",
+    "express": "^4.17.3",
     "express-async-errors": "^3.1.1",
     "jsonwebtoken": "^8.5.1",
     "pg": "^8.5.1",
@@ -27,8 +27,10 @@
     "@types/jest": "^27.5.1",
     "@types/jsonwebtoken": "^8.5.1",
     "@types/node": "^14.14.35",
+    "@types/supertest": "^2.0.12",
     "@types/uuid": "^8.3.0",
     "jest": "^28.1.0",
+    "supertest": "^6.2.3",
     "ts-jest": "^28.0.2",
     "ts-node-dev": "^1.1.6",
     "typescript": "^4.6.4"
